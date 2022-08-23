@@ -1,3 +1,5 @@
+![Logo](/images/serdine.jpg?raw=true)
+
 # Serdine
 
 Serdine is a tiny serialization library for storing types in a raw (but safe), memcpy-like, format.
