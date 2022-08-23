@@ -7,3 +7,5 @@ mod serialize;
 
 pub use deserialize::Deserialize;
 pub use serialize::Serialize;
+
+pub use serdine_derive as derive;
