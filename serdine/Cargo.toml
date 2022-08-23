@@ -1,0 +1,15 @@
+[package]
+name = "serdine"
+version = "0.1.0"
+authors = ["Saverio Miroddi <saverio.pub2@gmail.com>"]
+edition = "2021"
+rust-version = "1.56.1"
+description = "A tiny serialization library for storing types in a raw (but safe), memcpy-like, format"
+homepage = "https://github.com/64kramsystem/serdine"
+repository = "https://github.com/64kramsystem/serdine"
+license = "MIT"
+keywords = ["serialization"]
+categories = ["encoding"]
+
+[dependencies]
+serdine_derive = { version = "0.1.0", path = "../serdine_derive" }
