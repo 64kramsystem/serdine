@@ -7,20 +7,19 @@ use syn::{self, parse2, Data, DataStruct, DeriveInput, Fields, Lit, Meta, MetaNa
 
 type TokenStream2 = proc_macro2::TokenStream;
 
-const DESERIALIZE_ATTR: &str = "deserialize";
+const SERIALIZE_ATTR: &str = "serialize";
 
-pub(crate) fn impl_deserialize(input: impl Into<TokenStream2>) -> syn::Result<TokenStream2> {
+pub(crate) fn impl_serialize(input: impl Into<TokenStream2>) -> syn::Result<TokenStream2> {
     let ast: DeriveInput = parse2(input.into())?;
 
     let fields_data = collect_fields_data(&ast)?;
 
-    let deserialize_impl = impl_deserialize_trait(&ast, fields_data)?;
+    let serialize_impl = impl_serialize_trait(&ast, fields_data)?;
 
     Ok(quote!(
-        #deserialize_impl
+        #serialize_impl
     ))
 }
-
 fn collect_fields_data(ast: &'_ DeriveInput) -> syn::Result<Vec<FieldData>> {
     if let Data::Struct(DataStruct {
         fields: Fields::Named(fields),
@@ -43,11 +42,11 @@ fn collect_fields_data(ast: &'_ DeriveInput) -> syn::Result<Vec<FieldData>> {
                     ref path, ref lit, ..
                 }) = attr_meta
                 {
-                    if path.is_ident(DESERIALIZE_ATTR) {
+                    if path.is_ident(SERIALIZE_ATTR) {
                         if let Lit::Str(lit_val) = lit {
-                            field_data.deserialization_fn = Some(lit_val.to_owned());
+                            field_data.serialization_fn = Some(lit_val.to_owned());
                         } else {
-                            bail!("The `deserialize` attribute requires a string literal");
+                            bail!("The `serialize` attribute requires a string literal");
                         }
                     }
                 }
@@ -62,42 +61,32 @@ fn collect_fields_data(ast: &'_ DeriveInput) -> syn::Result<Vec<FieldData>> {
     }
 }
 
-fn impl_deserialize_trait(
+fn impl_serialize_trait(
     ast: &'_ DeriveInput,
     fields_data: Vec<FieldData>,
 ) -> syn::Result<TokenStream2> {
     let type_name = &ast.ident;
 
-    let fields_deserialization = fields_data.iter().map(
+    let fields_serialization = fields_data.iter().map(
         |FieldData {
              field,
-             deserialization_fn,
+             serialization_fn,
              ..
          }| {
-            let quoted_deserialization_fn = if let Some(deserialization_fn) = deserialization_fn {
-                let deserialization_fn =
-                    Ident::new(&deserialization_fn.value(), deserialization_fn.span());
-                quote! { #deserialization_fn(&mut r) }
+            if let Some(serialization_fn) = serialization_fn {
+                let serialization_fn =
+                    Ident::new(&serialization_fn.value(), serialization_fn.span());
+                quote! { #serialization_fn(&self.#field, &mut w); }
             } else {
-                quote! { serdine::Deserialize::deserialize(&mut r) }
-            };
-
-            quote! { let #field = #quoted_deserialization_fn; }
+                quote! { self.#field.serialize(&mut w); }
+            }
         },
     );
 
-    let self_fields = fields_data
-        .iter()
-        .map(|FieldData { field, .. }| quote! { #field, });
-
     Ok(quote!(
-        impl serdine::Deserialize for #type_name {
-            fn deserialize<R: std::io::Read>(mut r: R) -> Self {
-                #(#fields_deserialization)*
-
-                Self {
-                    #(#self_fields)*
-                }
+        impl serdine::Serialize for #type_name {
+            fn serialize<W: std::io::Write>(&self, mut w: W) {
+                    #(#fields_serialization)*
             }
         }
     ))

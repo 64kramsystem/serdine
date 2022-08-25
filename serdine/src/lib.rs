@@ -25,3 +25,5 @@ pub use serdine_derive as derive;
 
 #[cfg(test)]
 mod deserialize_test;
+#[cfg(test)]
+mod serialize_test;
