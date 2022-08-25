@@ -8,7 +8,6 @@ use syn::{self, parse2, Data, DataStruct, DeriveInput, Fields, Lit, Meta, MetaNa
 type TokenStream2 = proc_macro2::TokenStream;
 
 const DESERIALIZE_ATTR: &str = "deserialize";
-const SERIALIZE_ATTR: &str = "serialize";
 
 pub(crate) fn impl_deserialize(input: impl Into<TokenStream2>) -> syn::Result<TokenStream2> {
     let ast: DeriveInput = parse2(input.into())?;
@@ -49,12 +48,6 @@ fn find_fields(ast: &'_ DeriveInput) -> syn::Result<Vec<FieldData>> {
                             field_data.deserialization_fn = Some(lit_val.to_owned());
                         } else {
                             bail!("The `deserialize` attribute requires a string literal");
-                        }
-                    } else if path.is_ident(SERIALIZE_ATTR) {
-                        if let Lit::Str(lit_val) = lit {
-                            field_data.serialization_fn = Some(lit_val.to_owned());
-                        } else {
-                            bail!("The `serialize` attribute requires a string literal");
                         }
                     }
                 }
