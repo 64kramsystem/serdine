@@ -12,7 +12,7 @@ const DESERIALIZE_ATTR: &str = "deserialize";
 pub(crate) fn impl_deserialize(input: impl Into<TokenStream2>) -> syn::Result<TokenStream2> {
     let ast: DeriveInput = parse2(input.into())?;
 
-    let fields_data = find_fields(&ast)?;
+    let fields_data = collect_fields_data(&ast)?;
 
     let deserialize_impl = impl_deserialize_trait(&ast, fields_data)?;
 
@@ -21,7 +21,7 @@ pub(crate) fn impl_deserialize(input: impl Into<TokenStream2>) -> syn::Result<To
     ))
 }
 
-fn find_fields(ast: &'_ DeriveInput) -> syn::Result<Vec<FieldData>> {
+fn collect_fields_data(ast: &'_ DeriveInput) -> syn::Result<Vec<FieldData>> {
     if let Data::Struct(DataStruct {
         fields: Fields::Named(fields),
         ..
