@@ -12,4 +12,4 @@ keywords = ["serialization"]
 categories = ["encoding"]
 
 [dependencies]
-serdine_derive = { version = "0.1.0", path = "../serdine_derive" }
+serdine_derive = { version = "0.1", path = "../serdine_derive" }
