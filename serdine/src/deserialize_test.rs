@@ -4,29 +4,35 @@ use crate::{self as serdine, Deserialize};
 use serdine_derive::Deserialize;
 
 #[derive(Deserialize)]
-pub struct Pictype {
-    pub width: i16,
-    pub shapeptr: u32,
-    #[deserialize = "deserialize_sounddata"]
-    pub sounddata: Vec<u8>,
+pub struct Mytype {
+    pub my_i16: i16,
+    pub my_u32: u32,
+    pub my_f32: f32,
+    pub my_f64: f64,
+    pub my_arr: [u16; 2],
+    #[deserialize = "deserialize_vec"]
+    pub my_vec: Vec<u8>,
 }
 
-fn deserialize_sounddata<R: Read>(mut r: R) -> Vec<u8> {
+fn deserialize_vec<R: Read>(mut r: R) -> Vec<u8> {
     let mut buffer = Vec::new();
     r.read_to_end(&mut buffer).unwrap();
     buffer
 }
 
 #[test]
-fn test_sort() {
-    let test_file_path =
+fn test_deserialize() {
+    let data_file_path =
         Path::new(&std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("test_data/deserialize.dat");
 
-    let test_file = File::open(test_file_path).unwrap();
+    let data_file = File::open(data_file_path).unwrap();
 
-    let instance = Pictype::deserialize(&test_file);
+    let instance = Mytype::deserialize(&data_file);
 
-    assert_eq!(0x80, instance.width);
-    assert_eq!(0xCAFEBABE, instance.shapeptr);
-    assert_eq!(vec![0_u8, 1, 2, 3, 4], instance.sounddata);
+    assert_eq!(0x80, instance.my_i16);
+    assert_eq!(0xCAFEBABE, instance.my_u32);
+    assert_eq!(1004.981_f32, instance.my_f32);
+    assert_eq!(10.04981_f64, instance.my_f64);
+    assert_eq!([0x0100, 0x0302], instance.my_arr);
+    assert_eq!(vec![4, 5, 6], instance.my_vec);
 }
