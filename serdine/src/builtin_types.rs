@@ -15,7 +15,9 @@ impl_for_numeric!(
     u16,
     u32,
     u64,
-    u128
+    u128,
+    f32,
+    f64
 );
 
 impl_for_numeric!(Serialize, i8, i16, i32, i64, i128, u8, u16, u32, u64, u128);
