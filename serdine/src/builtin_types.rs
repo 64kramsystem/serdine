@@ -2,7 +2,7 @@ use std::convert::TryInto;
 use std::fmt::Debug;
 
 use crate::macros::impl_for_numeric;
-use crate::Deserialize;
+use crate::{Deserialize, Serialize};
 
 impl_for_numeric!(
     Deserialize,
@@ -35,5 +35,16 @@ where
             .collect::<Vec<_>>()
             .try_into()
             .unwrap()
+    }
+}
+
+impl<T, const N: usize> Serialize for [T; N]
+where
+    T: Serialize,
+{
+    fn serialize<W: std::io::Write>(&self, mut w: W) {
+        for instance in self {
+            instance.serialize(&mut w);
+        }
     }
 }
