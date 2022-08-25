@@ -16,15 +16,26 @@
 mod bail;
 mod deserialize;
 mod field_data;
+mod serialize;
 
 use deserialize::impl_deserialize;
 use proc_macro::TokenStream;
+use serialize::impl_serialize;
 
 #[proc_macro_derive(Deserialize, attributes(deserialize))]
 pub fn deserialize(input: TokenStream) -> TokenStream {
     let deserialize_impl = impl_deserialize(input);
 
     deserialize_impl
+        .unwrap_or_else(syn::Error::into_compile_error)
+        .into()
+}
+
+#[proc_macro_derive(Serialize, attributes(serialize))]
+pub fn serialize(input: TokenStream) -> TokenStream {
+    let serialize_impl = impl_serialize(input);
+
+    serialize_impl
         .unwrap_or_else(syn::Error::into_compile_error)
         .into()
 }
