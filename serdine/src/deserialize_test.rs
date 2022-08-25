@@ -9,6 +9,7 @@ pub struct Mytype {
     pub my_u32: u32,
     pub my_f32: f32,
     pub my_f64: f64,
+    pub my_arr: [u16; 2],
     #[deserialize = "deserialize_vec"]
     pub my_vec: Vec<u8>,
 }
@@ -32,5 +33,6 @@ fn test_deserialize() {
     assert_eq!(0xCAFEBABE, instance.my_u32);
     assert_eq!(1004.981_f32, instance.my_f32);
     assert_eq!(10.04981_f64, instance.my_f64);
-    assert_eq!(vec![0_u8, 1, 2, 3, 4], instance.my_vec);
+    assert_eq!([0x0100, 0x0302], instance.my_arr);
+    assert_eq!(vec![4, 5, 6], instance.my_vec);
 }
