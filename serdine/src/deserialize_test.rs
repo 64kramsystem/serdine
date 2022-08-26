@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::{io::Read, mem};
 
 use crate::{self as serdine, Deserialize};
 use serdine_derive::Deserialize;
@@ -44,4 +44,32 @@ fn test_deserialize_named_fields_struct() {
     assert_eq!(10.04981_f64, instance.my_f64);
     assert_eq!([0x0100, 0x0302], instance.my_arr);
     assert_eq!(vec![4, 5, 6], instance.my_vec);
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// ENUMS
+// ////////////////////////////////////////////////////////////////////////////////
+
+#[derive(Debug, Deserialize, PartialEq)]
+#[repr(u16)]
+enum MyEnum {
+    VarA = 0,
+    VarB = 1,
+    VarC = 65534,
+}
+
+#[test]
+fn test_deserialize_enum() {
+    #[rustfmt::skip]
+    let serialized_bytes: &[u8] = &[
+        0x00, 0x00,
+        0xFE, 0xFF,
+        0x01, 0x00,
+    ];
+
+    let mut reader = serialized_bytes;
+
+    assert_eq!(MyEnum::VarA, Deserialize::deserialize(&mut reader));
+    assert_eq!(MyEnum::VarC, Deserialize::deserialize(&mut reader));
+    assert_eq!(MyEnum::VarB, Deserialize::deserialize(&mut reader));
 }
