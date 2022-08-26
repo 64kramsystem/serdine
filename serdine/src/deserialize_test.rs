@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read, path::Path};
+use std::io::Read;
 
 use crate::{self as serdine, Deserialize};
 use serdine_derive::Deserialize;
@@ -26,12 +26,17 @@ fn deserialize_vec<R: Read>(mut r: R) -> Vec<u8> {
 
 #[test]
 fn test_deserialize_named_fields_struct() {
-    let data_file_path =
-        Path::new(&std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("test_data/deserialize.dat");
+    #[rustfmt::skip]
+    let serialized_bytes: &[u8] = &[
+        0x80, 0x00,
+        0xBE, 0xBA, 0xFE, 0xCA,
+        0xC9, 0x3E, 0x7B, 0x44,
+        0x0C, 0x07, 0x42, 0xB2, 0x80, 0x19, 0x24, 0x40,
+        0x00, 0x01, 0x02, 0x03,
+        0x04, 0x05, 0x06
+    ];
 
-    let data_file = File::open(data_file_path).unwrap();
-
-    let instance = MyNamedFieldsStruct::deserialize(&data_file);
+    let instance = MyNamedFieldsStruct::deserialize(serialized_bytes);
 
     assert_eq!(0x80, instance.my_i16);
     assert_eq!(0xCAFEBABE, instance.my_u32);
