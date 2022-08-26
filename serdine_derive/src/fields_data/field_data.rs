@@ -1,13 +1,13 @@
 use proc_macro2::Ident;
 use syn::{self, LitStr};
 
-pub struct FieldData {
+pub struct NamedFieldData {
     pub field: Ident,
     pub deserialization_fn: Option<LitStr>,
     pub serialization_fn: Option<LitStr>,
 }
 
-impl FieldData {
+impl NamedFieldData {
     pub fn new(field: Ident) -> Self {
         Self {
             field,

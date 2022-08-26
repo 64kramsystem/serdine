@@ -1,5 +1,5 @@
 use crate::bail::bail;
-use crate::field_data::FieldData;
+use crate::fields_data::NamedFieldData;
 
 use proc_macro2::Ident;
 use quote::quote;
@@ -21,7 +21,7 @@ pub(crate) fn impl_deserialize(input: impl Into<TokenStream2>) -> syn::Result<To
     ))
 }
 
-fn collect_fields_data(ast: &'_ DeriveInput) -> syn::Result<Vec<FieldData>> {
+fn collect_fields_data(ast: &'_ DeriveInput) -> syn::Result<Vec<NamedFieldData>> {
     if let Data::Struct(DataStruct {
         fields: Fields::Named(fields),
         ..
@@ -31,7 +31,7 @@ fn collect_fields_data(ast: &'_ DeriveInput) -> syn::Result<Vec<FieldData>> {
 
         for f in &fields.named {
             // Fields are named, so an ident is necessarily found.
-            let mut field_data = FieldData::new(f.ident.clone().unwrap());
+            let mut field_data = NamedFieldData::new(f.ident.clone().unwrap());
 
             for attr in &f.attrs {
                 let attr_meta = match attr.parse_meta() {
@@ -64,12 +64,12 @@ fn collect_fields_data(ast: &'_ DeriveInput) -> syn::Result<Vec<FieldData>> {
 
 fn impl_deserialize_trait(
     ast: &'_ DeriveInput,
-    fields_data: Vec<FieldData>,
+    fields_data: Vec<NamedFieldData>,
 ) -> syn::Result<TokenStream2> {
     let type_name = &ast.ident;
 
     let fields_deserialization = fields_data.iter().map(
-        |FieldData {
+        |NamedFieldData {
              field,
              deserialization_fn,
              ..
@@ -88,7 +88,7 @@ fn impl_deserialize_trait(
 
     let self_fields = fields_data
         .iter()
-        .map(|FieldData { field, .. }| quote! { #field, });
+        .map(|NamedFieldData { field, .. }| quote! { #field, });
 
     Ok(quote!(
         impl serdine::Deserialize for #type_name {
