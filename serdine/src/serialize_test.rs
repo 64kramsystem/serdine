@@ -13,6 +13,7 @@ pub struct MyNamedFieldsStruct {
     pub my_f32: f32,
     pub my_f64: f64,
     pub my_arr: [u16; 2],
+    pub my_bool: bool,
     #[serialize = "serialize_vec"]
     pub my_vec: Vec<u8>,
 }
@@ -31,6 +32,7 @@ fn test_serialize_named_fields_struct() {
         my_f32: 1004.981_f32,
         my_f64: 10.04981_f64,
         my_arr: [0x0100, 0x0302],
+        my_bool: true,
         my_vec: vec![4, 5, 6],
     };
 
@@ -45,6 +47,7 @@ fn test_serialize_named_fields_struct() {
         0xC9, 0x3E, 0x7B, 0x44,
         0x0C, 0x07, 0x42, 0xB2, 0x80, 0x19, 0x24, 0x40,
         0x00, 0x01, 0x02, 0x03,
+        0x01,
         0x04, 0x05, 0x06
     ];
 
