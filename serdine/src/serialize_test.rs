@@ -7,8 +7,12 @@ use std::{
 use crate::{self as serdine, Serialize};
 use serdine_derive::Serialize;
 
+// ////////////////////////////////////////////////////////////////////////////////
+// STRUCT WITH NAMED FIELDS
+// ////////////////////////////////////////////////////////////////////////////////
+
 #[derive(Serialize)]
-pub struct Mytype {
+pub struct MyNamedFieldsStruct {
     pub my_i16: i16,
     pub my_u32: u32,
     pub my_f32: f32,
@@ -25,8 +29,8 @@ fn serialize_vec<W: Write>(vec: &Vec<u8>, mut w: W) {
 }
 
 #[test]
-fn test_serialize() {
-    let instance = Mytype {
+fn test_serialize_named_fields_struct() {
+    let instance = MyNamedFieldsStruct {
         my_i16: 0x80,
         my_u32: 0xCAFEBABE,
         my_f32: 1004.981_f32,
