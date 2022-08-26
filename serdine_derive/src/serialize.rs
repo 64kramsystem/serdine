@@ -13,12 +13,13 @@ const SERIALIZE_ATTR: &str = "serialize";
 
 pub(crate) fn impl_serialize(input: impl Into<TokenStream2>) -> syn::Result<TokenStream2> {
     let ast: DeriveInput = parse2(input.into())?;
+    let type_name = &ast.ident;
 
     let serialize_impl = match &ast.data {
         Data::Struct(DataStruct { fields, .. }) => match fields {
             Fields::Named(fields) => {
                 let named_fields_data = collect_named_fields_data(fields)?;
-                impl_trait_with_named_fields(&ast, named_fields_data)?
+                impl_trait_with_named_fields(type_name, named_fields_data)?
             }
             Fields::Unnamed(_) => bail!("Unnamed fields not supported!"),
             Fields::Unit => bail!("Unit fields not supported!"),
@@ -70,11 +71,9 @@ fn collect_named_fields_data(fields: &FieldsNamed) -> syn::Result<Vec<NamedField
 }
 
 fn impl_trait_with_named_fields(
-    ast: &'_ DeriveInput,
+    type_name: &Ident,
     fields_data: Vec<NamedFieldData>,
 ) -> syn::Result<TokenStream2> {
-    let type_name = &ast.ident;
-
     let fields_serialization = fields_data.iter().map(
         |NamedFieldData {
              field,
