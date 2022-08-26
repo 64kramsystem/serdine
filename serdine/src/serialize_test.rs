@@ -1,8 +1,4 @@
-use std::{
-    collections::hash_map::DefaultHasher,
-    hash::{Hash, Hasher},
-    io::Write,
-};
+use std::io::Write;
 
 use crate::{self as serdine, Serialize};
 use serdine_derive::Serialize;
@@ -43,8 +39,15 @@ fn test_serialize_named_fields_struct() {
 
     instance.serialize(&mut serialized_instance);
 
-    let mut hash = DefaultHasher::new();
-    serialized_instance.hash(&mut hash);
+    #[rustfmt::skip]
+    let expected_bytes: &[u8] = &[
+        0x80, 0x00,
+        0xBE, 0xBA, 0xFE, 0xCA,
+        0xC9, 0x3E, 0x7B, 0x44,
+        0x0C, 0x07, 0x42, 0xB2, 0x80, 0x19, 0x24, 0x40,
+        0x00, 0x01, 0x02, 0x03,
+        0x04, 0x05, 0x06
+    ];
 
-    assert_eq!(0xF414562B918E708B, hash.finish());
+    assert_eq!(expected_bytes, serialized_instance);
 }
