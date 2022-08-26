@@ -91,7 +91,7 @@ fn impl_trait_with_enum_variants(
     Ok(quote!(
         impl Deserialize for #type_name {
             fn deserialize<R: Read>(mut r: R) -> Self {
-                let mut buffer = [0; mem::size_of::<Self>()];
+                let mut buffer = [0; std::mem::size_of::<Self>()];
 
                 r.read_exact(&mut buffer).unwrap();
 
