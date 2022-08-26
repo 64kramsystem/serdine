@@ -14,9 +14,11 @@
 )]
 
 mod bail;
+mod collection;
 mod deserialize;
 mod fields_data;
 mod serialize;
+mod target;
 
 use deserialize::impl_deserialize;
 use proc_macro::TokenStream;

@@ -1,73 +1,44 @@
-use crate::bail::bail;
-use crate::fields_data::NamedFieldData;
+use crate::collection::{collect_variants_data, find_type_numeric_repr};
+use crate::fields_data::{NamedFieldData, VariantData};
+use crate::target::Target::ForDeserialization;
+use crate::{bail::bail, collection::collect_named_fields_data};
 
 use proc_macro2::Ident;
 use quote::quote;
-use syn::{self, parse2, Data, DataStruct, DeriveInput, Fields, Lit, Meta, MetaNameValue};
+use syn::{self, parse2, Data, DataStruct, DeriveInput, Fields};
 
 type TokenStream2 = proc_macro2::TokenStream;
 
-const DESERIALIZE_ATTR: &str = "deserialize";
-
 pub(crate) fn impl_deserialize(input: impl Into<TokenStream2>) -> syn::Result<TokenStream2> {
     let ast: DeriveInput = parse2(input.into())?;
+    let type_name = &ast.ident;
 
-    let fields_data = collect_fields_data(&ast)?;
-
-    let deserialize_impl = impl_deserialize_trait(&ast, fields_data)?;
+    let deserialize_impl = match &ast.data {
+        Data::Struct(DataStruct { fields, .. }) => match fields {
+            Fields::Named(fields) => {
+                let named_fields_data = collect_named_fields_data(fields, ForDeserialization)?;
+                impl_trait_with_named_fields(type_name, named_fields_data)?
+            }
+            Fields::Unnamed(_) => bail!("Unnamed fields not supported!"),
+            Fields::Unit => bail!("Unit fields not supported!"),
+        },
+        Data::Enum(data_enum) => {
+            let enum_repr = find_type_numeric_repr(&ast)?;
+            let variants_data = collect_variants_data(data_enum)?;
+            impl_trait_with_enum_variants(type_name, enum_repr, variants_data)?
+        }
+        Data::Union(_) => bail!("Unions not supported!"),
+    };
 
     Ok(quote!(
         #deserialize_impl
     ))
 }
 
-fn collect_fields_data(ast: &'_ DeriveInput) -> syn::Result<Vec<NamedFieldData>> {
-    if let Data::Struct(DataStruct {
-        fields: Fields::Named(fields),
-        ..
-    }) = &ast.data
-    {
-        let mut fields_data = vec![];
-
-        for f in &fields.named {
-            // Fields are named, so an ident is necessarily found.
-            let mut field_data = NamedFieldData::new(f.ident.clone().unwrap());
-
-            for attr in &f.attrs {
-                let attr_meta = match attr.parse_meta() {
-                    Ok(meta) => meta,
-                    Err(error) => bail!(error),
-                };
-
-                if let Meta::NameValue(MetaNameValue {
-                    ref path, ref lit, ..
-                }) = attr_meta
-                {
-                    if path.is_ident(DESERIALIZE_ATTR) {
-                        if let Lit::Str(lit_val) = lit {
-                            field_data.deserialization_fn = Some(lit_val.to_owned());
-                        } else {
-                            bail!("The `deserialize` attribute requires a string literal");
-                        }
-                    }
-                }
-            }
-
-            fields_data.push(field_data);
-        }
-
-        Ok(fields_data)
-    } else {
-        bail!("Unexpected input; named fields expected")
-    }
-}
-
-fn impl_deserialize_trait(
-    ast: &'_ DeriveInput,
+fn impl_trait_with_named_fields(
+    type_name: &Ident,
     fields_data: Vec<NamedFieldData>,
 ) -> syn::Result<TokenStream2> {
-    let type_name = &ast.ident;
-
     let fields_deserialization = fields_data.iter().map(
         |NamedFieldData {
              field,
@@ -97,6 +68,36 @@ fn impl_deserialize_trait(
 
                 Self {
                     #(#self_fields)*
+                }
+            }
+        }
+    ))
+}
+
+fn impl_trait_with_enum_variants(
+    type_name: &Ident,
+    enum_repr: Ident,
+    variants_data: Vec<VariantData>,
+) -> syn::Result<TokenStream2> {
+    let field_matches = variants_data.iter().map(
+        |VariantData {
+             variant,
+             discriminant,
+         }| {
+            quote! { #discriminant => Self::#variant, }
+        },
+    );
+
+    Ok(quote!(
+        impl Deserialize for #type_name {
+            fn deserialize<R: Read>(mut r: R) -> Self {
+                let mut buffer = [0; mem::size_of::<Self>()];
+
+                r.read_exact(&mut buffer).unwrap();
+
+                match #enum_repr::from_le_bytes(buffer) {
+                    #(#field_matches)*
+                    value => panic!("Unrecognized value for 'MyEnum' variant: {}", value),
                 }
             }
         }

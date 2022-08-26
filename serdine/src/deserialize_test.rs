@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read, path::Path};
+use std::{io::Read, mem};
 
 use crate::{self as serdine, Deserialize};
 use serdine_derive::Deserialize;
@@ -26,12 +26,17 @@ fn deserialize_vec<R: Read>(mut r: R) -> Vec<u8> {
 
 #[test]
 fn test_deserialize_named_fields_struct() {
-    let data_file_path =
-        Path::new(&std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("test_data/deserialize.dat");
+    #[rustfmt::skip]
+    let serialized_bytes: &[u8] = &[
+        0x80, 0x00,
+        0xBE, 0xBA, 0xFE, 0xCA,
+        0xC9, 0x3E, 0x7B, 0x44,
+        0x0C, 0x07, 0x42, 0xB2, 0x80, 0x19, 0x24, 0x40,
+        0x00, 0x01, 0x02, 0x03,
+        0x04, 0x05, 0x06
+    ];
 
-    let data_file = File::open(data_file_path).unwrap();
-
-    let instance = MyNamedFieldsStruct::deserialize(&data_file);
+    let instance = MyNamedFieldsStruct::deserialize(serialized_bytes);
 
     assert_eq!(0x80, instance.my_i16);
     assert_eq!(0xCAFEBABE, instance.my_u32);
@@ -39,4 +44,32 @@ fn test_deserialize_named_fields_struct() {
     assert_eq!(10.04981_f64, instance.my_f64);
     assert_eq!([0x0100, 0x0302], instance.my_arr);
     assert_eq!(vec![4, 5, 6], instance.my_vec);
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// ENUMS
+// ////////////////////////////////////////////////////////////////////////////////
+
+#[derive(Debug, Deserialize, PartialEq)]
+#[repr(u16)]
+enum MyEnum {
+    VarA = 0,
+    VarB = 1,
+    VarC = 65534,
+}
+
+#[test]
+fn test_deserialize_enum() {
+    #[rustfmt::skip]
+    let serialized_bytes: &[u8] = &[
+        0x00, 0x00,
+        0xFE, 0xFF,
+        0x01, 0x00,
+    ];
+
+    let mut reader = serialized_bytes;
+
+    assert_eq!(MyEnum::VarA, Deserialize::deserialize(&mut reader));
+    assert_eq!(MyEnum::VarC, Deserialize::deserialize(&mut reader));
+    assert_eq!(MyEnum::VarB, Deserialize::deserialize(&mut reader));
 }
