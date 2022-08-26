@@ -1,15 +1,17 @@
-use crate::bail::bail;
 use crate::fields_data::NamedFieldData;
+use crate::{bail::bail, fields_data::VariantData};
 
 use proc_macro2::Ident;
 use quote::quote;
 use syn::{
-    self, parse2, Data, DataStruct, DeriveInput, Fields, FieldsNamed, Lit, Meta, MetaNameValue,
+    self, parse2, Data, DataStruct, DeriveInput, Expr, ExprLit, Fields, FieldsNamed, Lit, Meta,
+    MetaNameValue,
 };
 
 type TokenStream2 = proc_macro2::TokenStream;
 
 const SERIALIZE_ATTR: &str = "serialize";
+const REPR_PATH: &str = "repr";
 
 pub(crate) fn impl_serialize(input: impl Into<TokenStream2>) -> syn::Result<TokenStream2> {
     let ast: DeriveInput = parse2(input.into())?;
@@ -24,7 +26,11 @@ pub(crate) fn impl_serialize(input: impl Into<TokenStream2>) -> syn::Result<Toke
             Fields::Unnamed(_) => bail!("Unnamed fields not supported!"),
             Fields::Unit => bail!("Unit fields not supported!"),
         },
-        Data::Enum(_) => bail!("Enums not supported!"),
+        Data::Enum(data_enum) => {
+            let enum_repr = find_type_numeric_repr(&ast)?;
+            let variants_data = collect_variants_data(data_enum)?;
+            impl_trait_with_enum_variants(type_name, enum_repr, variants_data)?
+        }
         Data::Union(_) => bail!("Unions not supported!"),
     };
 
@@ -94,6 +100,88 @@ fn impl_trait_with_named_fields(
         impl serdine::Serialize for #type_name {
             fn serialize<W: std::io::Write>(&self, mut w: W) {
                     #(#fields_serialization)*
+            }
+        }
+    ))
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// ENUMS
+// ////////////////////////////////////////////////////////////////////////////////
+
+fn find_type_numeric_repr(ast: &'_ DeriveInput) -> syn::Result<Ident> {
+    for attr in &ast.attrs {
+        if attr.path.is_ident(REPR_PATH) {
+            if let Ok(ident) = attr.parse_args::<Ident>() {
+                // It seems that there is no way of natively identifying primitive types, so we must
+                // verify manually (see https://stackoverflow.com/q/66906261).
+
+                let ident_str = ident.to_string();
+                let mut ident_chars = ident_str.chars();
+
+                let numeric_type = ident_chars.next();
+
+                if matches!(numeric_type, Some('i') | Some('u')) {
+                    let type_width = ident_chars.collect::<String>();
+
+                    if type_width.parse::<u8>().is_ok() {
+                        return Ok(ident);
+                    }
+                }
+            }
+        };
+    }
+
+    bail!("Enum repr() not found!")
+}
+
+fn collect_variants_data(data_enum: &syn::DataEnum) -> syn::Result<Vec<VariantData>> {
+    let mut variants_data = vec![];
+
+    for variant in &data_enum.variants {
+        let ident = variant.ident.clone();
+        let discriminant = if let Some((
+            _,
+            Expr::Lit(ExprLit {
+                lit: Lit::Int(lit_int),
+                ..
+            }),
+        )) = &variant.discriminant
+        {
+            lit_int.clone()
+        } else {
+            bail!(format!("'{}' variant discriminant not found!", ident))
+        };
+
+        variants_data.push(VariantData::new(ident, discriminant));
+    }
+
+    Ok(variants_data)
+}
+
+fn impl_trait_with_enum_variants(
+    type_name: &Ident,
+    enum_repr: Ident,
+    variants_data: Vec<VariantData>,
+) -> syn::Result<TokenStream2> {
+    let field_matches = variants_data.iter().map(
+        |VariantData {
+             variant,
+             discriminant,
+         }| {
+            quote! { Self::#variant => #discriminant, }
+        },
+    );
+
+    Ok(quote!(
+        impl serdine::Serialize for #type_name {
+            fn serialize<W: std::io::Write>(&self, mut w: W) {
+                let numeric_value = match self {
+                    #(#field_matches)*
+                };
+
+                #enum_repr::serialize(&numeric_value, &mut w);
+
             }
         }
     ))

@@ -51,3 +51,33 @@ fn test_serialize_named_fields_struct() {
 
     assert_eq!(expected_bytes, serialized_instance);
 }
+
+#[derive(Serialize)]
+#[repr(u16)]
+enum MyEnum {
+    VarA = 0,
+    VarB = 1,
+    VarC = 65534,
+}
+
+// ////////////////////////////////////////////////////////////////////////////////
+// ENUMS
+// ////////////////////////////////////////////////////////////////////////////////
+
+#[test]
+fn test_serialize_enum() {
+    let mut serialized_instance = Vec::new();
+
+    MyEnum::VarA.serialize(&mut serialized_instance);
+    MyEnum::VarC.serialize(&mut serialized_instance);
+    MyEnum::VarB.serialize(&mut serialized_instance);
+
+    #[rustfmt::skip]
+    let expected_bytes: &[u8] = &[
+        0x00, 0x00,
+        0xFE, 0xFF,
+        0x01, 0x00,
+    ];
+
+    assert_eq!(expected_bytes, serialized_instance);
+}
