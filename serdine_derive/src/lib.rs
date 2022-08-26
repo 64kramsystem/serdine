@@ -15,7 +15,7 @@
 
 mod bail;
 mod deserialize;
-mod field_data;
+mod fields_data;
 mod serialize;
 
 use deserialize::impl_deserialize;
