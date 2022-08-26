@@ -1,5 +1,3 @@
-use std::io::Write;
-
 use crate::{self as serdine, Serialize};
 use serdine_derive::Serialize;
 
@@ -18,7 +16,7 @@ pub struct MyNamedFieldsStruct {
     pub my_vec: Vec<u8>,
 }
 
-fn serialize_vec<W: Write>(vec: &Vec<u8>, mut w: W) {
+fn serialize_vec<W: std::io::Write>(vec: &Vec<u8>, mut w: W) {
     for instance in vec {
         instance.serialize(&mut w);
     }

@@ -1,5 +1,3 @@
-use std::{io::Read, mem};
-
 use crate::{self as serdine, Deserialize};
 use serdine_derive::Deserialize;
 
@@ -18,7 +16,7 @@ pub struct MyNamedFieldsStruct {
     pub my_vec: Vec<u8>,
 }
 
-fn deserialize_vec<R: Read>(mut r: R) -> Vec<u8> {
+fn deserialize_vec<R: std::io::Read>(mut r: R) -> Vec<u8> {
     let mut buffer = Vec::new();
     r.read_to_end(&mut buffer).unwrap();
     buffer
