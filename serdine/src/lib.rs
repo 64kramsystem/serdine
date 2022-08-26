@@ -13,9 +13,9 @@
   clippy::type_complexity,
 )]
 
-mod builtin_types;
 mod deserialize;
 mod macros;
+mod primitive_types;
 mod serialize;
 
 pub use deserialize::Deserialize;
