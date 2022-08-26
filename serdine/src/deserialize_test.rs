@@ -1,4 +1,5 @@
-use crate::{self as serdine, Deserialize};
+use crate as serdine;
+use crate::Deserialize as DeserializeDisambiguate;
 use serdine_derive::Deserialize;
 
 // ////////////////////////////////////////////////////////////////////////////////
@@ -67,7 +68,7 @@ fn test_deserialize_enum() {
 
     let mut reader = serialized_bytes;
 
-    assert_eq!(MyEnum::VarA, Deserialize::deserialize(&mut reader));
-    assert_eq!(MyEnum::VarC, Deserialize::deserialize(&mut reader));
-    assert_eq!(MyEnum::VarB, Deserialize::deserialize(&mut reader));
+    assert_eq!(MyEnum::VarA, serdine::Deserialize::deserialize(&mut reader));
+    assert_eq!(MyEnum::VarC, serdine::Deserialize::deserialize(&mut reader));
+    assert_eq!(MyEnum::VarB, serdine::Deserialize::deserialize(&mut reader));
 }

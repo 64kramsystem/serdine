@@ -1,4 +1,5 @@
-use crate::{self as serdine, Serialize};
+use crate as serdine;
+use crate::Serialize as DeserializeDisambiguate;
 use serdine_derive::Serialize;
 
 // ////////////////////////////////////////////////////////////////////////////////
