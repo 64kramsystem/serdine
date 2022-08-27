@@ -5,6 +5,7 @@ authors = ["Saverio Miroddi <saverio.pub2@gmail.com>"]
 edition = "2021"
 rust-version = "1.56.1"
 description = "A tiny serialization library for storing types in a raw (but safe), memcpy-like, format"
+readme = "../README.md"
 homepage = "https://github.com/64kramsystem/serdine"
 repository = "https://github.com/64kramsystem/serdine"
 license = "MIT"
