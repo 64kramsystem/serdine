@@ -1,0 +1,23 @@
+name: Build caches
+
+on:
+  push:
+    branches: [ $default-branch ]
+jobs:
+  build_project_cache:
+    name: Build project cache
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+    - uses: actions-rs/cargo@v1
+      with:
+        command: build
