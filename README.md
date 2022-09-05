@@ -19,11 +19,11 @@ The de/serialization traits are extremely simple:
 
 ```rs
 pub trait Serialize {
-    fn serialize<W: Write>(&self, w: W);
+    fn serialize<W: Write>(&self, w: W) -> Result<(), std::io::Error>;
 }
 
 pub trait Deserialize {
-    fn deserialize<R: Read>(r: R) -> Self;
+    fn deserialize<R: Read>(r: R) -> Result<Self, std::io::Error>;
 }
 ```
 
@@ -44,10 +44,10 @@ pub struct MyNamedFieldsStruct {
     pub my_vec: Vec<u8>,
 }
 
-fn deserialize_vec<R: std::io::Read>(mut r: R) -> Vec<u8> {
+fn deserialize_vec<R: std::io::Read>(mut r: R) -> Result<Vec<u8>, std::io::Error> {
     let mut buffer = Vec::new();
-    r.read_to_end(&mut buffer).unwrap();
-    buffer
+    r.read_to_end(&mut buffer)?;
+    Ok(buffer)
 }
 
 fn deserialize_named_fields_struct() {
@@ -61,7 +61,7 @@ fn deserialize_named_fields_struct() {
         0x04, 0x05, 0x06
     ];
 
-    let instance = MyNamedFieldsStruct::deserialize(serialized_bytes);
+    let instance = MyNamedFieldsStruct::deserialize(serialized_bytes).unwrap();
 
     assert_eq!(0x80,                        instance.my_i16);
     assert_eq!(0xCAFEBABE,          instance.my_u32);
@@ -87,9 +87,9 @@ enum MyEnum {
 fn serialize_enum() {
     let mut serialized_instance = Vec::new();
 
-    MyEnum::VarA.serialize(&mut serialized_instance);
-    MyEnum::VarC.serialize(&mut serialized_instance);
-    MyEnum::VarB.serialize(&mut serialized_instance);
+    MyEnum::VarA.serialize(&mut serialized_instance).unwrap();
+    MyEnum::VarC.serialize(&mut serialized_instance).unwrap();
+    MyEnum::VarB.serialize(&mut serialized_instance).unwrap();
 
     let expected_bytes: &[u8] = &[
         0x00, 0x00,
