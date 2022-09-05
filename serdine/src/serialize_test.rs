@@ -18,10 +18,11 @@ pub struct MyNamedFieldsStruct {
     pub my_vec: Vec<u8>,
 }
 
-fn serialize_vec<W: std::io::Write>(vec: &Vec<u8>, mut w: W) {
+fn serialize_vec<W: std::io::Write>(vec: &Vec<u8>, mut w: W) -> Result<(), std::io::Error> {
     for instance in vec {
-        instance.serialize(&mut w);
+        instance.serialize(&mut w)?;
     }
+    Ok(())
 }
 
 #[test]
@@ -38,7 +39,7 @@ fn test_serialize_named_fields_struct() {
 
     let mut serialized_instance = Vec::new();
 
-    instance.serialize(&mut serialized_instance);
+    instance.serialize(&mut serialized_instance).unwrap();
 
     #[rustfmt::skip]
     let expected_bytes: &[u8] = &[
@@ -70,9 +71,9 @@ enum MyEnum {
 fn test_serialize_enum() {
     let mut serialized_instance = Vec::new();
 
-    MyEnum::VarA.serialize(&mut serialized_instance);
-    MyEnum::VarC.serialize(&mut serialized_instance);
-    MyEnum::VarB.serialize(&mut serialized_instance);
+    MyEnum::VarA.serialize(&mut serialized_instance).unwrap();
+    MyEnum::VarC.serialize(&mut serialized_instance).unwrap();
+    MyEnum::VarB.serialize(&mut serialized_instance).unwrap();
 
     #[rustfmt::skip]
     let expected_bytes: &[u8] = &[

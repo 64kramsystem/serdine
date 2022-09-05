@@ -48,17 +48,19 @@ fn impl_trait_with_named_fields(
             if let Some(serialization_fn) = serialization_fn {
                 let serialization_fn =
                     Ident::new(&serialization_fn.value(), serialization_fn.span());
-                quote! { #serialization_fn(&self.#field, &mut w); }
+                quote! { #serialization_fn(&self.#field, &mut w)?; }
             } else {
-                quote! { self.#field.serialize(&mut w); }
+                quote! { self.#field.serialize(&mut w)?; }
             }
         },
     );
 
     Ok(quote!(
         impl serdine::Serialize for #type_name {
-            fn serialize<W: std::io::Write>(&self, mut w: W) {
+            fn serialize<W: std::io::Write>(&self, mut w: W) -> Result<(), std::io::Error> {
                     #(#fields_serialization)*
+
+                    Ok(())
             }
         }
     ))
@@ -80,13 +82,14 @@ fn impl_trait_with_enum_variants(
 
     Ok(quote!(
         impl serdine::Serialize for #type_name {
-            fn serialize<W: std::io::Write>(&self, mut w: W) {
+            fn serialize<W: std::io::Write>(&self, mut w: W) -> Result<(), std::io::Error> {
                 let numeric_value = match self {
                     #(#field_matches)*
                 };
 
-                #enum_repr::serialize(&numeric_value, &mut w);
+                #enum_repr::serialize(&numeric_value, &mut w)?;
 
+                Ok(())
             }
         }
     ))
