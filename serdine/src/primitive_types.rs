@@ -1,5 +1,4 @@
 use std::convert::TryInto;
-use std::fmt::Debug;
 
 use crate::macros::impl_for_numeric;
 use crate::{Deserialize, Serialize};
@@ -41,7 +40,7 @@ impl Serialize for bool {
 
 impl<T, const N: usize> Deserialize for [T; N]
 where
-    T: Deserialize + Debug,
+    T: Deserialize,
 {
     fn deserialize<R: std::io::Read>(mut r: R) -> Result<Self, std::io::Error> {
         // Optimization (e.g. via `arr_macro` crate) is insignificant in this context, and it should
@@ -58,8 +57,13 @@ where
 
         // try_into() is guaranteed to succeed, unless the cycle above is created with an incorrect
         // number of pushes.
+        // We use `if Let` because unwrap() requires `T` to be Debug.
         //
-        Ok(result.try_into().unwrap())
+        if let Ok(result) = result.try_into() {
+            Ok(result)
+        } else {
+            unreachable!()
+        }
     }
 }
 
