@@ -32,9 +32,10 @@ impl Deserialize for bool {
 }
 
 impl Serialize for bool {
-    fn serialize<W: std::io::Write>(&self, mut w: W) {
+    fn serialize<W: std::io::Write>(&self, mut w: W) -> Result<(), std::io::Error> {
         let buffer = [if *self { 1 } else { 0 }; 1];
-        w.write_all(&buffer).unwrap();
+        w.write_all(&buffer)?;
+        Ok(())
     }
 }
 
@@ -66,9 +67,10 @@ impl<T, const N: usize> Serialize for [T; N]
 where
     T: Serialize,
 {
-    fn serialize<W: std::io::Write>(&self, mut w: W) {
+    fn serialize<W: std::io::Write>(&self, mut w: W) -> Result<(), std::io::Error> {
         for instance in self {
-            instance.serialize(&mut w);
+            instance.serialize(&mut w)?;
         }
+        Ok(())
     }
 }

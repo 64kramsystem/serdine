@@ -14,9 +14,10 @@ macro_rules! impl_for_numeric {
     ( Serialize, $( $type:ty ),+ ) => {
         $(
             impl crate::Serialize for $type {
-                fn serialize<W: std::io::Write>(&self, mut w: W) {
+                fn serialize<W: std::io::Write>(&self, mut w: W) -> Result<(), std::io::Error> {
                     let encoded = self.to_le_bytes();
-                    w.write_all(&encoded).unwrap();
+                    w.write_all(&encoded)?;
+                    Ok(())
                 }
             }
         )+
