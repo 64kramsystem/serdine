@@ -1,6 +1,6 @@
 [package]
 name = "serdine"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Saverio Miroddi <saverio.pub2@gmail.com>"]
 edition = "2021"
 rust-version = "1.56.1"
@@ -13,4 +13,4 @@ keywords = ["serialization"]
 categories = ["encoding"]
 
 [dependencies]
-serdine_derive = { version = "~0", path = "../serdine_derive" }
+serdine_derive = { version = "~0.6.0", path = "../serdine_derive" }

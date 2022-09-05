@@ -1,6 +1,6 @@
 [package]
 name = "serdine_derive"
-version = "0.5.1"
+version = "0.6.0"
 authors = ["Saverio Miroddi <saverio.pub2@gmail.com>"]
 edition = "2021"
 rust-version = "1.56.1"
