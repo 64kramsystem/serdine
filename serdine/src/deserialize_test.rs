@@ -18,10 +18,10 @@ pub struct MyNamedFieldsStruct {
     pub my_vec: Vec<u8>,
 }
 
-fn deserialize_vec<R: std::io::Read>(mut r: R) -> Vec<u8> {
+fn deserialize_vec<R: std::io::Read>(mut r: R) -> Result<Vec<u8>, std::io::Error> {
     let mut buffer = Vec::new();
-    r.read_to_end(&mut buffer).unwrap();
-    buffer
+    r.read_to_end(&mut buffer)?;
+    Ok(buffer)
 }
 
 #[test]
@@ -37,7 +37,7 @@ fn test_deserialize_named_fields_struct() {
         0x04, 0x05, 0x06
     ];
 
-    let instance = MyNamedFieldsStruct::deserialize(serialized_bytes);
+    let instance = MyNamedFieldsStruct::deserialize(serialized_bytes).unwrap();
 
     assert_eq!(0x80, instance.my_i16);
     assert_eq!(0xCAFEBABE, instance.my_u32);
@@ -71,7 +71,16 @@ fn test_deserialize_enum() {
 
     let mut reader = serialized_bytes;
 
-    assert_eq!(MyEnum::VarA, serdine::Deserialize::deserialize(&mut reader));
-    assert_eq!(MyEnum::VarC, serdine::Deserialize::deserialize(&mut reader));
-    assert_eq!(MyEnum::VarB, serdine::Deserialize::deserialize(&mut reader));
+    assert_eq!(
+        MyEnum::VarA,
+        serdine::Deserialize::deserialize(&mut reader).unwrap()
+    );
+    assert_eq!(
+        MyEnum::VarC,
+        serdine::Deserialize::deserialize(&mut reader).unwrap()
+    );
+    assert_eq!(
+        MyEnum::VarB,
+        serdine::Deserialize::deserialize(&mut reader).unwrap()
+    );
 }

@@ -2,10 +2,11 @@ macro_rules! impl_for_numeric {
     ( Deserialize, $( $type:ty ),+ ) => {
         $(
             impl crate::Deserialize for $type {
-                fn deserialize<R: std::io::Read>(mut r: R) -> Self {
+                fn deserialize<R: std::io::Read>(mut r: R) -> Result<Self, std::io::Error> {
                     let mut buffer = [0; std::mem::size_of::<$type>()];
-                    r.read_exact(&mut buffer).unwrap();
-                    <$type>::from_le_bytes(buffer)
+                    r.read_exact(&mut buffer)?;
+                    let result = <$type>::from_le_bytes(buffer);
+                    Ok(result)
                 }
             }
         )+

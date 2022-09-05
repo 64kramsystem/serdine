@@ -48,9 +48,9 @@ fn impl_trait_with_named_fields(
             let quoted_deserialization_fn = if let Some(deserialization_fn) = deserialization_fn {
                 let deserialization_fn =
                     Ident::new(&deserialization_fn.value(), deserialization_fn.span());
-                quote! { #deserialization_fn(&mut r) }
+                quote! { #deserialization_fn(&mut r)? }
             } else {
-                quote! { serdine::Deserialize::deserialize(&mut r) }
+                quote! { serdine::Deserialize::deserialize(&mut r)? }
             };
 
             quote! { let #field = #quoted_deserialization_fn; }
@@ -63,12 +63,14 @@ fn impl_trait_with_named_fields(
 
     Ok(quote!(
         impl serdine::Deserialize for #type_name {
-            fn deserialize<R: std::io::Read>(mut r: R) -> Self {
+            fn deserialize<R: std::io::Read>(mut r: R) -> Result<Self, std::io::Error> {
                 #(#fields_deserialization)*
 
-                Self {
+                let result = Self {
                     #(#self_fields)*
-                }
+                };
+
+                Ok(result)
             }
         }
     ))
@@ -90,15 +92,17 @@ fn impl_trait_with_enum_variants(
 
     Ok(quote!(
         impl serdine::Deserialize for #type_name {
-            fn deserialize<R: std::io::Read>(mut r: R) -> Self {
+            fn deserialize<R: std::io::Read>(mut r: R) -> Result<Self, std::io::Error> {
                 let mut buffer = [0; std::mem::size_of::<Self>()];
 
-                r.read_exact(&mut buffer).unwrap();
+                r.read_exact(&mut buffer)?;
 
-                match #enum_repr::from_le_bytes(buffer) {
+                let result = match #enum_repr::from_le_bytes(buffer) {
                     #(#field_matches)*
                     value => panic!("Unrecognized value for 'MyEnum' variant: {}", value),
-                }
+                };
+
+                Ok(result)
             }
         }
     ))
