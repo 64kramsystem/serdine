@@ -8,7 +8,16 @@ This is convenient for example, when interfacing with data files belonging to C 
 
 ## Status
 
-This library is currently used by another project of mine ([Catacomb II-64k](https://github.com/64kramsystem/catacomb_ii-64k)); I'm in the process of updating it, with documentation and new features.
+This library is currently used by another project of mine ([Catacomb II-64k](https://github.com/64kramsystem/catacomb_ii-64k)), so I don't need to add any new feature, however, if anybody happened to find it useful, I can easily extend it.
+
+Some ideas:
+
+- [ ] Add support for tuple structs support
+- [ ] Add support for unions
+- [ ] Add support for packed structs
+- [ ] Add support for big endian (as feature)
+- [ ] Make `no_std`
+- [ ] Automatically implement `Vec<_>` when it's the last field
 
 ## Design and examples
 
